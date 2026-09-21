@@ -19,7 +19,7 @@ with the stock ones. It appears on every Space, and you can drag it anywhere.
 
 ## Install
 
-1. Download **Spindle-x.y.z.zip** from the [latest release](../../releases/latest).
+1. Download **Spindle-x.y.z.zip** from the repo, the latest release will be there.
 2. Unzip it and drag **Spindle** into your **Applications** folder.
 3. Double-click it. **macOS will refuse to open it the first time**  (see below.)
 
