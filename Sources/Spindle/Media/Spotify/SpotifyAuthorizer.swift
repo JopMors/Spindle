@@ -19,7 +19,12 @@ final class SpotifyAuthorizer: ObservableObject, SpotifyTokenProviding {
     /// Fixed so it can be registered in the Spotify dashboard once.
     static let redirectPort: UInt16 = 43721
     static let redirectURI = "http://127.0.0.1:\(redirectPort)/callback"
-    static let scopes = ["playlist-read-private", "playlist-read-collaborative", "user-library-read"]
+    static let scopes = [
+        "playlist-read-private",
+        "playlist-read-collaborative",
+        "user-library-read",
+        "user-read-recently-played"
+    ]
 
     /// How long the browser sign-in may take before we stop listening.
     private static let signInTimeout: Duration = .seconds(300)

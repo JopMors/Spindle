@@ -76,6 +76,8 @@ private struct AppleMusicLogo: View {
 
 private struct SpotifyLogo: View {
     private static let green = Color(red: 0.12, green: 0.84, blue: 0.38)
+    /// Clockwise lean of the three arcs, as in the real mark.
+    private static let tilt: Double = 8
 
     var body: some View {
         GeometryReader { proxy in
@@ -84,6 +86,7 @@ private struct SpotifyLogo: View {
                 Circle().fill(Self.green)
                 SpotifyWaves()
                     .frame(width: side, height: side)
+                    .rotationEffect(.degrees(Self.tilt))
             }
             .frame(width: side, height: side)
         }

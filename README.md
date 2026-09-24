@@ -113,6 +113,11 @@ Spindle
  └ Now Playing
 ```
 
+**Playlists** are listed A to Z. **Artists** and **Albums** put what you played
+most recently at the top: Music keeps a played date for every track, while
+Spotify only reports your last 50 plays, so on Spotify everything past those is
+ordered by when you liked it.
+
 Opening a playlist puts **Play Playlist** above its tracks, so you can start the
 whole thing without picking one out of it. **Songs** has the same row as **Play
 All**, meaning the whole library. Artists and albums do not: those lists are
@@ -146,7 +151,8 @@ and needs a one-time setup under **Settings → Spotify**:
    allows five users per app — which is why each person uses their own.
 2. Add the redirect URI `http://127.0.0.1:43721/callback` to it.
 3. Paste its **Client ID** into Settings and click **Connect Spotify**, then
-   approve in the browser.
+   approve in the browser. If you connected before 2.5.0, disconnect and
+   connect again once, so Spindle may read your recently played songs.
 
 No client secret is involved (it uses PKCE), and the sign-in is kept in your
 keychain. Playlists only show up if you own them or collaborate on them: Spotify

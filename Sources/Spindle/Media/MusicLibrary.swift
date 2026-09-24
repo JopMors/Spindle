@@ -10,6 +10,10 @@ struct LibraryTrack: Equatable, Identifiable {
     let name: String
     let artist: String
     let album: String
+    /// When it was last played, where the source knows. Orders Artists and
+    /// Albums; see `LibraryGrouping`.
+    var lastPlayed: Date? = nil
+    var dateAdded: Date? = nil
 
     var id: Int { index }
 }
@@ -212,7 +216,7 @@ final class MusicLibrary: MusicLibraryProviding {
     """
 
     private static func tracksScript(container: String) -> String {
-        // Three parallel lists in one round trip. Asking for the fields track
+        // Five parallel lists in one round trip. Asking for the fields track
         // by track takes seconds on a real library; this takes milliseconds.
         //
         // The plural has to stay a *reference* — binding `every track` to a
@@ -223,7 +227,9 @@ final class MusicLibrary: MusicLibraryProviding {
             set thePlaylist to \(container)
             return {name of every track of thePlaylist, \
         artist of every track of thePlaylist, \
-        album of every track of thePlaylist}
+        album of every track of thePlaylist, \
+        played date of every track of thePlaylist, \
+        date added of every track of thePlaylist}
         end tell
         """
     }
@@ -239,7 +245,8 @@ final class MusicLibrary: MusicLibraryProviding {
         }
     }
 
-    private static func tracks(from descriptor: NSAppleEventDescriptor) -> [LibraryTrack] {
+    /// Internal so the decoding can be tested with hand-built descriptors.
+    static func tracks(from descriptor: NSAppleEventDescriptor) -> [LibraryTrack] {
         guard descriptor.numberOfItems >= 3,
               let names = descriptor.atIndex(1),
               let artists = descriptor.atIndex(2),
@@ -248,15 +255,26 @@ final class MusicLibrary: MusicLibraryProviding {
         let nameList = strings(from: names)
         let artistList = strings(from: artists)
         let albumList = strings(from: albums)
+        let playedList = dates(from: descriptor.atIndex(4))
+        let addedList = dates(from: descriptor.atIndex(5))
 
         return nameList.enumerated().map { offset, name in
             LibraryTrack(
                 index: offset + 1,
                 name: name,
                 artist: offset < artistList.count ? artistList[offset] : "",
-                album: offset < albumList.count ? albumList[offset] : ""
+                album: offset < albumList.count ? albumList[offset] : "",
+                lastPlayed: offset < playedList.count ? playedList[offset] : nil,
+                dateAdded: offset < addedList.count ? addedList[offset] : nil
             )
         }
+    }
+
+    /// Never-played tracks come back as `missing value`, which has no date.
+    /// Positions are kept, so the list still lines up with the names.
+    private static func dates(from descriptor: NSAppleEventDescriptor?) -> [Date?] {
+        guard let descriptor, descriptor.numberOfItems > 0 else { return [] }
+        return (1...descriptor.numberOfItems).map { descriptor.atIndex($0)?.dateValue }
     }
 
     // MARK: - Execution

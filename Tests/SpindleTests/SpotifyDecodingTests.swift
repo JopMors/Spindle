@@ -68,6 +68,42 @@ struct SpotifyDecodingTests {
         #expect(page.items.compactMap(\.track).compactMap(\.libraryTrack).map(\.name) == ["Four"])
     }
 
+    @Test("Recent plays decode, with or without fractional seconds")
+    func recentPlays() throws {
+        let page = try decode(SpotifyPage<SpotifyPlayHistoryItem>.self, """
+        {"next": null, "items": [
+          {"played_at": "2026-09-20T10:00:00.589Z",
+           "track": {"type": "track", "uri": "spotify:track:1", "name": "One", "artists": [], "album": null}},
+          {"played_at": "2026-09-19T10:00:00Z",
+           "track": {"type": "track", "uri": "spotify:track:2", "name": "Two", "artists": [], "album": null}}
+        ]}
+        """)
+
+        #expect(page.items.map(\.track.uri) == ["spotify:track:1", "spotify:track:2"])
+        #expect(page.items[0].playedAt.timeIntervalSince1970.rounded(.down) == 1_789_898_400)
+        #expect(page.items[1].playedAt.timeIntervalSince1970 == 1_789_812_000)
+    }
+
+    @Test("A liked song takes its latest play, and keeps when it was liked")
+    func mergesPlays() {
+        let liked = [
+            SpotifyTrack(uri: "spotify:track:1", name: "One", artist: "", album: "", artworkURL: nil,
+                         dateAdded: Date(timeIntervalSince1970: 10)),
+            SpotifyTrack(uri: "spotify:track:2", name: "Two", artist: "", album: "", artworkURL: nil,
+                         dateAdded: Date(timeIntervalSince1970: 20))
+        ]
+        let plays = [
+            SpotifyPlay(uri: "spotify:track:1", playedAt: Date(timeIntervalSince1970: 100)),
+            SpotifyPlay(uri: "spotify:track:1", playedAt: Date(timeIntervalSince1970: 300)),
+            SpotifyPlay(uri: "spotify:track:9", playedAt: Date(timeIntervalSince1970: 400))
+        ]
+
+        let merged = SpotifyWebAPI.merge(liked, plays: plays)
+
+        #expect(merged.map(\.lastPlayed) == [Date(timeIntervalSince1970: 300), nil])
+        #expect(merged.map(\.dateAdded) == [Date(timeIntervalSince1970: 10), Date(timeIntervalSince1970: 20)])
+    }
+
     @Test("Only playlists whose tracks Spotify will hand over are listed")
     func readablePlaylists() throws {
         let page = try decode(SpotifyPage<SpotifyPlaylistObject>.self, """

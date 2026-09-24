@@ -168,9 +168,9 @@ final class MenuViewModel: ObservableObject {
     private func rebuildGroupedRows() {
         switch level {
         case .artists:
-            rows = groupRows(by: \.artist)
+            rows = recentGroupRows(by: \.artist)
         case .albums:
-            rows = groupRows(by: \.album)
+            rows = recentGroupRows(by: \.album)
         case .songs:
             rows = withPlayAll("Play All", trackRows(loadedTracks))
         case .artist(let name):
@@ -185,11 +185,9 @@ final class MenuViewModel: ObservableObject {
         clampSelection()
     }
 
-    private func groupRows(by field: KeyPath<LibraryTrack, String>) -> [MenuRow] {
-        let names = Set(loadedTracks.map { $0[keyPath: field] })
-            .filter { !$0.isEmpty }
-            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-        return names.map { MenuRow(id: MenuRowID.group($0), title: $0) }
+    private func recentGroupRows(by field: KeyPath<LibraryTrack, String>) -> [MenuRow] {
+        LibraryGrouping.recentFirst(loadedTracks, by: field)
+            .map { MenuRow(id: MenuRowID.group($0), title: $0) }
     }
 
     private func trackRows(_ tracks: [LibraryTrack]) -> [MenuRow] {
@@ -256,9 +254,11 @@ final class MenuViewModel: ObservableObject {
             switch result {
             case .success(let playlists):
                 self.loadedPlaylists = playlists
-                self.rows = playlists.map {
-                    MenuRow(id: MenuRowID.playlist($0.index), title: $0.name)
-                }
+                // Alphabetical whatever the source's own order; each row keeps
+                // its real position, which is what playback addresses.
+                self.rows = playlists
+                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                    .map { MenuRow(id: MenuRowID.playlist($0.index), title: $0.name) }
                 self.clampSelection()
             case .failure(let error):
                 self.fail(with: error)

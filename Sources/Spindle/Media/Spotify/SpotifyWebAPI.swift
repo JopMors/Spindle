@@ -28,11 +28,29 @@ final class SpotifyWebAPI: SpotifyCatalog {
     /// 10 000 items. A ceiling so a looping `next` link cannot run forever.
     private static let maxPages = 200
 
+    /// Spotify's own cap on listening history.
+    private static let recentPlaysLimit = 50
+
     static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+        decoder.dateDecodingStrategy = .custom(decodeISO8601)
         return decoder
     }()
+
+    /// `played_at` carries milliseconds and `added_at` does not, and the
+    /// built-in `.iso8601` strategy accepts only the latter.
+    private static func decodeISO8601(_ decoder: Decoder) throws -> Date {
+        let text = try decoder.singleValueContainer().decode(String.self)
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = fractional.date(from: text) ?? ISO8601DateFormatter().date(from: text) else {
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: decoder.codingPath, debugDescription: "Not an ISO 8601 date: \(text)")
+            )
+        }
+        return date
+    }
 
     private let tokens: SpotifyTokenProviding
     private let session: URLSession
@@ -58,9 +76,32 @@ final class SpotifyWebAPI: SpotifyCatalog {
         return items.compactMap(\.content).compactMap(\.libraryTrack)
     }
 
+    /// Liked Songs, each stamped with its latest play where Spotify's history
+    /// still has one, so Artists and Albums can put recent listening first.
     func savedTracks() async throws -> [SpotifyTrack] {
         let items: [SpotifySavedTrack] = try await allPages(of: "me/tracks")
-        return items.compactMap(\.track).compactMap(\.libraryTrack)
+        return Self.merge(items.compactMap(\.libraryTrack), plays: await recentPlays())
+    }
+
+    /// The last 50 plays. Optional: a sign-in from before this scope existed
+    /// is refused, and the menu then orders by when songs were liked instead.
+    private func recentPlays() async -> [SpotifyPlay] {
+        var components = URLComponents(
+            url: Self.baseURL.appendingPathComponent("me/player/recently-played"), resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [URLQueryItem(name: "limit", value: String(Self.recentPlaysLimit))]
+        do {
+            let page: SpotifyPage<SpotifyPlayHistoryItem> = try await get(components.url!)
+            return page.items.map { SpotifyPlay(uri: $0.track.uri, playedAt: $0.playedAt) }
+        } catch {
+            NSLog("Spindle: no Spotify listening history (\(error)); reconnect Spotify to allow it")
+            return []
+        }
+    }
+
+    static func merge(_ tracks: [SpotifyTrack], plays: [SpotifyPlay]) -> [SpotifyTrack] {
+        let latest = Dictionary(plays.map { ($0.uri, $0.playedAt) }, uniquingKeysWith: max)
+        return tracks.map { $0.played(at: latest[$0.uri]) }
     }
 
     /// Not cached: one small request, and signing in as someone else must not

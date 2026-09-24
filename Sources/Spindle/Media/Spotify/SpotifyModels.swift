@@ -31,6 +31,25 @@ struct SpotifyTrack: Equatable {
     let artist: String
     let album: String
     let artworkURL: URL?
+    var lastPlayed: Date? = nil
+    /// When it was liked. Only known for Liked Songs.
+    var dateAdded: Date? = nil
+
+    func played(at date: Date?) -> SpotifyTrack {
+        SpotifyTrack(uri: uri, name: name, artist: artist, album: album,
+                     artworkURL: artworkURL, lastPlayed: date, dateAdded: dateAdded)
+    }
+
+    func added(at date: Date?) -> SpotifyTrack {
+        SpotifyTrack(uri: uri, name: name, artist: artist, album: album,
+                     artworkURL: artworkURL, lastPlayed: lastPlayed, dateAdded: date)
+    }
+}
+
+/// One entry of the listening history.
+struct SpotifyPlay: Equatable {
+    let uri: String
+    let playedAt: Date
 }
 
 /// A playlist whose tracks Spotify will actually hand over.
@@ -81,13 +100,25 @@ struct SpotifyPlaylistItem: Decodable {
 /// A Liked Songs entry.
 struct SpotifySavedTrack: Decodable {
     let track: SpotifyTrackObject?
+    let addedAt: Date?
 
-    private enum CodingKeys: String, CodingKey { case track }
+    private enum CodingKeys: String, CodingKey { case track, addedAt }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         track = (try? container.decodeIfPresent(SpotifyTrackObject.self, forKey: .track)) ?? nil
+        addedAt = (try? container.decodeIfPresent(Date.self, forKey: .addedAt)) ?? nil
     }
+
+    var libraryTrack: SpotifyTrack? {
+        track?.libraryTrack?.added(at: addedAt)
+    }
+}
+
+/// A recently-played entry.
+struct SpotifyPlayHistoryItem: Decodable {
+    let track: SpotifyTrackObject
+    let playedAt: Date
 }
 
 struct SpotifyTrackObject: Decodable {

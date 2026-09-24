@@ -65,7 +65,10 @@ final class SpotifyLibrary: MusicLibraryProviding {
             completion(result.map { tracks in
                 self?.trackCache[playlistIndex] = tracks
                 return tracks.enumerated().map { offset, track in
-                    LibraryTrack(index: offset + 1, name: track.name, artist: track.artist, album: track.album)
+                    LibraryTrack(
+                        index: offset + 1, name: track.name, artist: track.artist, album: track.album,
+                        lastPlayed: track.lastPlayed, dateAdded: track.dateAdded
+                    )
                 }
             })
         }
