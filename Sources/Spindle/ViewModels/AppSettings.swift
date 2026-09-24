@@ -140,6 +140,11 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(queuesRestOfList, forKey: Key.queueRest) }
     }
 
+    /// What the note at the bottom of the wheel opens.
+    @Published var wheelSourceTarget: WheelSourceTarget {
+        didSet { defaults.set(wheelSourceTarget.rawValue, forKey: Key.wheelSourceTarget) }
+    }
+
     /// Remembered on our side: MediaRemote can set these but exposes no
     /// readable current value. See `PlaybackModeController`.
     @Published var shuffleMode: ShuffleMode {
@@ -176,6 +181,7 @@ final class AppSettings: ObservableObject {
         static let wheelScroll = "wheel.scroll"
         static let wheelClick = "wheel.click"
         static let wheelClickVolume = "wheel.clickVolume"
+        static let wheelSourceTarget = "wheel.sourceTarget"
         static let volumeSlider = "screen.volumeSlider"
         static let menuArtwork = "menu.artwork"
         static let queueRest = "playback.queueRest"
@@ -217,6 +223,9 @@ final class AppSettings: ObservableObject {
         self.showsVolumeSlider = defaults.object(forKey: Key.volumeSlider) as? Bool ?? false
         self.showsMenuArtwork = defaults.object(forKey: Key.menuArtwork) as? Bool ?? true
         self.queuesRestOfList = defaults.object(forKey: Key.queueRest) as? Bool ?? true
+
+        let storedSourceTarget = defaults.string(forKey: Key.wheelSourceTarget) ?? ""
+        self.wheelSourceTarget = WheelSourceTarget(rawValue: storedSourceTarget) ?? .media
 
         let storedShuffle = defaults.object(forKey: Key.shuffleMode) as? Int ?? 0
         self.shuffleMode = ShuffleMode(rawValue: storedShuffle) ?? .off

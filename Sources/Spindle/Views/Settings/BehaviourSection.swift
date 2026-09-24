@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Placement, position lock and light/dark treatment.
+/// Placement, position lock, the note button and light/dark treatment.
 struct BehaviourSection: View {
     @ObservedObject var settings: AppSettings
 
@@ -19,6 +19,15 @@ struct BehaviourSection: View {
 
             Toggle("Lock position", isOn: $settings.isPositionLocked)
             Text(lockDetail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Text("Note button opens")
+                Spacer()
+                WheelTargetPicker(selection: $settings.wheelSourceTarget)
+            }
+            Text(settings.wheelSourceTarget.detail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

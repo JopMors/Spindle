@@ -38,7 +38,7 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
             Text("""
             MENU on the click wheel reopens this window; \
-            the music note opens Apple Music.
+            the music note opens what you picked under Behaviour.
             """)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)

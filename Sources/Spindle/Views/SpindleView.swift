@@ -21,7 +21,7 @@ struct SpindleView: View {
                 onCommand: { device.transport($0) { viewModel.send($0) } },
                 onMenu: device.menuButtonPressed,
                 onCenter: { device.centerButtonPressed { viewModel.send($0) } },
-                onOpenSource: { SourceAppLauncher.open(bundleIdentifier: viewModel.nowPlaying.sourceBundleID) },
+                onOpenSource: openSource,
                 onRotate: device.wheelScrolled(by:),
                 onRotateEnded: device.resetWheelTravel
             )
@@ -33,6 +33,11 @@ struct SpindleView: View {
         .animation(.easeInOut(duration: 0.28), value: viewModel.artworkGeneration)
         .animation(.easeInOut(duration: 0.2), value: viewModel.nowPlaying.isPlaying)
         .preferredColorScheme(settings.colorScheme)
+    }
+
+    private func openSource() {
+        let nowPlaying = viewModel.nowPlaying.sourceBundleID
+        SourceAppLauncher.open(bundleIdentifier: settings.wheelSourceTarget.bundleIdentifier(nowPlaying: nowPlaying))
     }
 
     @ViewBuilder
