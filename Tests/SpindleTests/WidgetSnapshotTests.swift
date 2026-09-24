@@ -6,7 +6,7 @@ import Testing
 /// Renders the widget to PNGs under `.build/preview/` so the design can be
 /// inspected without launching the app. Also asserts the rendered pixel size,
 /// which is what "match the clock widget's width" actually means.
-@Suite("Widget snapshots")
+@Suite("Widget snapshots", .serialized)
 @MainActor
 struct WidgetSnapshotTests {
 
