@@ -57,15 +57,17 @@ and a dial icon appears in the menu bar.
 ## Permissions
 
 **Automation, for the menu, and as a fallback.** Browsing Playlists, Artists,
-Albums or Songs reads them out of Music.app, which needs this. Playback control,
+Albums or Songs reads them out of Music.app, and playing a Spotify pick goes
+through Spotify's own scripting, both of which need this. Playback control,
 shuffle and repeat all go through the system media controls, which need no
 permission at all. If macOS prompts, allow it, or set it manually:
 
 > System Settings → Privacy & Security → Automation → **Spindle** → enable
 > **Music** / **Spotify**
 
-The app does **not** need Screen Recording, Accessibility, Full Disk Access, or
-a network connection. It never talks to the internet.
+The app does **not** need Screen Recording, Accessibility or Full Disk Access.
+It only talks to the internet if you connect Spotify, and then only to
+Spotify's own API, to read your playlists, Liked Songs and their covers.
 
 ---
 
@@ -78,7 +80,7 @@ a network connection. It never talks to the internet.
 | **MENU (top)** | Opens the menu | Back up one level |
 | **Right of wheel** | Next track | Next track |
 | **Left of wheel** | Previous track | Previous track |
-| **Bottom of wheel** | Opens whatever is playing | Opens whatever is playing |
+| **Bottom of wheel** | Opens Apple Music, Spotify or whatever is playing — your pick | Same |
 | **Click the screen** | Opens the menu | Selects that row |
 | **Drag the scrubber** | Jumps to that point | — |
 
@@ -119,6 +121,36 @@ grouped on this side, and there is no real container for Music to queue from.
 Picking a single song plays that song out of your own playlist and keeps the rest
 of that playlist going behind it. Nothing is copied and nothing is added to your
 library.
+
+### Apple Music or Spotify
+
+**Settings → Behaviour → Note button opens** picks what the bottom of the wheel
+opens, and the same toggle decides whose library the menu browses:
+
+| Toggle | Note button opens | Menu browses |
+| --- | --- | --- |
+| **Apple Music** | Music | Music |
+| **Spotify** | Spotify | Spotify |
+| **Media** (default) | Whatever is playing, YouTube in a browser included | Spotify while Spotify plays, otherwise Music |
+
+On Spotify the menu works the same as on Music: Playlists, Artists, Albums and
+Songs, Play Playlist and Play All, album art while browsing, and the rest of the
+list queued behind a hand-picked song. **Liked Songs** stand in for the library,
+so Artists, Albums and Songs are built from them.
+
+Spotify has no scripting for browsing, so this goes through the Spotify Web API
+and needs a one-time setup under **Settings → Spotify**:
+
+1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard).
+   Since February 2026 Spotify requires the app's owner to have **Premium**, and
+   allows five users per app — which is why each person uses their own.
+2. Add the redirect URI `http://127.0.0.1:43721/callback` to it.
+3. Paste its **Client ID** into Settings and click **Connect Spotify**, then
+   approve in the browser.
+
+No client secret is involved (it uses PKCE), and the sign-in is kept in your
+keychain. Playlists only show up if you own them or collaborate on them: Spotify
+no longer hands anyone else's playlist contents to apps.
 
 ### The menu bar icon
 
@@ -269,6 +301,13 @@ in the menu bar icon.
 
 **The menu says "Allow Automation for Music".** Reading playlists needs it:
 System Settings → Privacy & Security → Automation → Spindle → Music.
+
+**The menu says "Connect Spotify in Settings".** The toggle points at Spotify but
+no account is connected, or Spotify revoked the sign-in. Settings → Spotify →
+**Connect Spotify**.
+
+**A Spotify playlist is missing from the menu.** It is one you follow rather than
+own. Spotify only returns the contents of playlists you own or collaborate on.
 
 ---
 

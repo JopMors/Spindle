@@ -53,6 +53,9 @@ final class SpindleViewModel: ObservableObject {
 
     private var accumulatedScroll: Double = 0
 
+    /// Who is playing, for the Media position of the source toggle.
+    private var nowPlayingBundleID: String?
+
     init(
         settings: AppSettings,
         library: MusicLibraryProviding = MusicLibrary(),
@@ -78,6 +81,15 @@ final class SpindleViewModel: ObservableObject {
                 self.menu.isArtworkPreviewEnabled = self.settings.showsMenuArtwork
             }
             .store(in: &cancellables)
+        // Fires with the new value, so the menu can switch straight away.
+        settings.$wheelSourceTarget
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] target in
+                guard let self, self.mode == .menu else { return }
+                self.selectLibrary(for: target)
+            }
+            .store(in: &cancellables)
     }
 
     /// Follows playback so the queue knows when a track is about to end.
@@ -86,6 +98,7 @@ final class SpindleViewModel: ObservableObject {
             .sink { [weak self] state in
                 guard let self else { return }
                 self.queue.update(state)
+                self.nowPlayingBundleID = state.sourceBundleID
                 // Anything on the machine can move the system volume; this is
                 // the only regular tick the widget has to notice.
                 if let level = VolumeController.currentVolume() {
@@ -112,6 +125,7 @@ final class SpindleViewModel: ObservableObject {
 
     func showMenu() {
         guard mode != .menu else { return }
+        selectLibrary(for: settings.wheelSourceTarget)
         menu.reset()
         menu.shuffleLabel = shuffle.label
         menu.repeatLabel = repeatMode.label
@@ -121,6 +135,18 @@ final class SpindleViewModel: ObservableObject {
 
     func showNowPlaying() {
         mode = .nowPlaying
+    }
+
+    /// Points the menu at the library the toggle asks for. Resolved when the
+    /// menu opens, not continuously, so Media cannot swap libraries under the
+    /// highlight because a browser tab started playing.
+    private func selectLibrary(for target: WheelSourceTarget) {
+        guard var switching = library as? LibrarySwitching else { return }
+        let wanted = LibrarySource.resolve(target: target, nowPlayingBundleID: nowPlayingBundleID)
+        guard wanted != switching.source else { return }
+        switching.source = wanted
+        menu.libraryChanged()
+        Diagnostics.log("menu library: \(wanted.rawValue)")
     }
 
     /// The MENU button: up one level, and off the menu entirely from the top.

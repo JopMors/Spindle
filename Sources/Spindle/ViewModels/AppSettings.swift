@@ -145,6 +145,12 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(wheelSourceTarget.rawValue, forKey: Key.wheelSourceTarget) }
     }
 
+    /// From the user's own app at developer.spotify.com. Not a secret — PKCE
+    /// needs none — so it lives with the other preferences.
+    @Published var spotifyClientID: String {
+        didSet { defaults.set(spotifyClientID, forKey: Key.spotifyClientID) }
+    }
+
     /// Remembered on our side: MediaRemote can set these but exposes no
     /// readable current value. See `PlaybackModeController`.
     @Published var shuffleMode: ShuffleMode {
@@ -182,6 +188,7 @@ final class AppSettings: ObservableObject {
         static let wheelClick = "wheel.click"
         static let wheelClickVolume = "wheel.clickVolume"
         static let wheelSourceTarget = "wheel.sourceTarget"
+        static let spotifyClientID = "spotify.clientID"
         static let volumeSlider = "screen.volumeSlider"
         static let menuArtwork = "menu.artwork"
         static let queueRest = "playback.queueRest"
@@ -226,6 +233,7 @@ final class AppSettings: ObservableObject {
 
         let storedSourceTarget = defaults.string(forKey: Key.wheelSourceTarget) ?? ""
         self.wheelSourceTarget = WheelSourceTarget(rawValue: storedSourceTarget) ?? .media
+        self.spotifyClientID = defaults.string(forKey: Key.spotifyClientID) ?? ""
 
         let storedShuffle = defaults.object(forKey: Key.shuffleMode) as? Int ?? 0
         self.shuffleMode = ShuffleMode(rawValue: storedShuffle) ?? .off

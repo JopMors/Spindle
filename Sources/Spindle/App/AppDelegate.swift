@@ -7,7 +7,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = AppSettings()
     private lazy var service: MediaService = MediaRemoteAdapterService()
     private lazy var viewModel = NowPlayingViewModel(service: service)
-    private lazy var device = SpindleViewModel(settings: settings)
+    private lazy var spotify = SpotifyAuthorizer(settings: settings)
+    /// The menu browses Music or Spotify, whichever the note-button toggle picks.
+    private lazy var library = LibraryRouter(
+        music: MusicLibrary(),
+        spotify: SpotifyLibrary(catalog: SpotifyWebAPI(tokens: spotify))
+    )
+    private lazy var device = SpindleViewModel(settings: settings, library: library)
 
     private var widgetController: WidgetWindowController?
     private var settingsController: SettingsWindowController?
@@ -19,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let settingsController = SettingsWindowController(
             settings: settings,
+            spotify: spotify,
             backendDescription: viewModel.backendDescription
         )
         self.settingsController = settingsController

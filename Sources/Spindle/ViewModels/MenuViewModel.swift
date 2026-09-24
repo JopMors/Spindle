@@ -70,6 +70,16 @@ final class MenuViewModel: ObservableObject {
         rebuildStaticRows()
     }
 
+    /// The source toggle moved: nothing loaded so far belongs to the library
+    /// now being browsed, so start again from the top.
+    func libraryChanged() {
+        preview.clearCache()
+        previewArtwork = nil
+        loadedTracks = []
+        loadedPlaylists = []
+        reset()
+    }
+
     func moveSelection(by steps: Int) {
         guard !rows.isEmpty else { return }
         selection = min(max(selection + steps, 0), rows.count - 1)

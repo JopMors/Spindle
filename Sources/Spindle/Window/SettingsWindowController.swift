@@ -6,11 +6,13 @@ import SwiftUI
 final class SettingsWindowController {
 
     private let settings: AppSettings
+    private let spotify: SpotifyAuthorizer
     private let backendDescription: String
     private var window: NSWindow?
 
-    init(settings: AppSettings, backendDescription: String) {
+    init(settings: AppSettings, spotify: SpotifyAuthorizer, backendDescription: String) {
         self.settings = settings
+        self.spotify = spotify
         self.backendDescription = backendDescription
     }
 
@@ -24,7 +26,11 @@ final class SettingsWindowController {
     }
 
     private func makeWindow() -> NSWindow {
-        let view = SettingsView(settings: settings, backendDescription: backendDescription)
+        let view = SettingsView(
+            settings: settings,
+            spotify: spotify,
+            backendDescription: backendDescription
+        )
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 380, height: 480),
             styleMask: [.titled, .closable, .fullSizeContentView],

@@ -32,6 +32,10 @@ final class QueueController: ObservableObject {
     private let now: () -> Date
 
     private var queue: PlaybackQueue?
+    /// The library the current queue came from. Pinned when playback starts,
+    /// so moving the source toggle mid-queue cannot send the next track's
+    /// position to a different library.
+    private var target: MusicLibraryProviding?
     private var advanceTask: Task<Void, Never>?
     /// While this is in the future, a title that does not match the queue is
     /// Music catching up rather than the user intervening.
@@ -67,6 +71,7 @@ final class QueueController: ObservableObject {
             playOnce(trackIndex: trackIndex, in: container, completion: completion)
             return
         }
+        target = library.playbackTarget
         adopt(queue, completion: completion)
     }
 
@@ -77,6 +82,7 @@ final class QueueController: ObservableObject {
         completion: @escaping (MusicLibraryError?) -> Void
     ) {
         relinquish()
+        target = library.playbackTarget
         send(trackIndex: trackIndex, in: container, completion: completion)
     }
 
@@ -86,6 +92,7 @@ final class QueueController: ObservableObject {
         advanceTask?.cancel()
         advanceTask = nil
         queue = nil
+        target = nil
         settlesBy = nil
         position = nil
     }
@@ -155,6 +162,7 @@ final class QueueController: ObservableObject {
         in container: QueueContainer,
         completion: @escaping (MusicLibraryError?) -> Void
     ) {
+        let library = target ?? self.library
         switch container {
         case .playlist(let index):
             library.play(playlistIndex: index, trackIndex: trackIndex, completion: completion)

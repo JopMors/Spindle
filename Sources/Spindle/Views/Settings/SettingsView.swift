@@ -6,6 +6,7 @@ import SwiftUI
 /// here is what the widget uses on the next launch.
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
+    let spotify: SpotifyAuthorizer
     let backendDescription: String
 
     var body: some View {
@@ -20,6 +21,8 @@ struct SettingsView: View {
                 ScreenSection(settings: settings)
                 Divider()
                 BehaviourSection(settings: settings)
+                Divider()
+                SpotifySection(settings: settings, authorizer: spotify)
                 Divider()
                 footer
             }
