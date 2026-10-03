@@ -1,6 +1,6 @@
 # Spindle
 
-[![Spindle trailer, click for the full video with sound](docs/trailer.gif)](spindle%20trailer.mp4)
+https://github.com/user-attachments/assets/8ae798b4-3647-4a07-8446-5b877a8ef34e
 
 A macOS desktop widget shaped like a 2000s-era portable music player. It shows
 whatever is currently playing, from **any** app, not just Music — the album cover
