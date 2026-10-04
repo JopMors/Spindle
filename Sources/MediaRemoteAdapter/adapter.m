@@ -52,6 +52,11 @@ static void emitLine(NSString *json) {
 }
 
 static void emitDictionary(NSDictionary *payload) {
+    // dataWithJSONObject: raises instead of returning an error on bad input.
+    if (![NSJSONSerialization isValidJSONObject:payload]) {
+        fprintf(stderr, "adapter: dropped payload that is not valid JSON\n");
+        return;
+    }
     NSError *error = nil;
     NSData *data = [NSJSONSerialization dataWithJSONObject:payload options:0 error:&error];
     if (!data) {
@@ -71,8 +76,11 @@ static id stringOrNull(id value) {
     return [value isKindOfClass:NSString.class] ? value : NSNull.null;
 }
 
+// MediaRemote reports infinite/NaN values (e.g. duration with nothing loaded).
+// NSJSONSerialization throws on those, which would kill the host process.
 static id numberOrNull(id value) {
-    return [value isKindOfClass:NSNumber.class] ? value : NSNull.null;
+    if (![value isKindOfClass:NSNumber.class]) { return NSNull.null; }
+    return isfinite([(NSNumber *)value doubleValue]) ? value : NSNull.null;
 }
 
 static NSDictionary *buildPayload(NSDictionary *info, BOOL isPlaying) {
